@@ -1,8 +1,8 @@
-# Strong Password Generator
+# BMI Calculator
 
 - **Language**: Python
-- **Libraries**: Tkinter, random
+- **Libraries**: Tkinter, random, Sqlite
 - **Features**:
   - Customizable input
-  - Password length specification
-  - Clipboard copy function
+  - Appropriate Calculation
+  - User-friendly GUI
