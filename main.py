@@ -1,82 +1,95 @@
-#Importing Necessary Dependencies
-from tkinter import *
+import tkinter as tk
 from tkinter import messagebox
-import random
+from PIL import Image, ImageTk
+import database as backend
 
-#Creating frame
-root = Tk()
-root.title('Strong - Password Generator')
-root.geometry('500x400')
+# Global variables to hold user details
+full_name_var = None
+age_var = None
+height_entry = None
+weight_entry = None
+bmi_output_label = None
 
-#logic to generate random password from string, integer and character provided by user
-def generate_password():
-    pw_entry.delete(0, END)
-    
-    input_string = string_entry.get()
-    numbers = num_entry.get()
-    symbols = special_entry.get()
-    
+# Logic of Classifying the BMI index values
+def on_generate_clicked():
     try:
-        pw_length = int(length_entry.get())
+        full_name = full_name_var.get()
+        age = age_var.get()
+        height = float(height_entry.get())
+        weight = float(weight_entry.get())
+        bmi_result = backend.calculate_bmi(height, weight)
+        bmi_result = float(bmi_result)
+        
+        if bmi_result < 18.5:
+            category = "Underweight"
+        elif 18.5 <= bmi_result < 24.9:
+            category = "Healthy"
+        elif 24.9 <= bmi_result < 29.9:
+            category = "Overweight"
+        elif bmi_result >= 30:
+            category = "Obesity"
+
+        backend.insert_data(full_name, age, height, weight, bmi_result)
+        bmi_output_label.config(text=f"Your BMI is: {bmi_result} \n Category: {category}")
     except ValueError:
-        messagebox.showerror("Error", "Please enter a valid integer for the password length")
-        return
-    
-    combined_string = input_string + numbers + symbols
-    
-    if pw_length > len(combined_string):
-        messagebox.showerror("Error", "Password length cannot be greater than the combined length of the input string, numbers, and symbols")
-        return
+        bmi_output_label.config(text="Error: Invalid input.")
 
-    my_password = ''.join(random.sample(combined_string, pw_length))
+def on_view_graph_clicked():
+    backend.create_histogram()
 
-    pw_entry.insert(0, my_password)
+def open_main_app():
+    global full_name_var, age_var, height_entry, weight_entry, bmi_output_label
 
-#Clipboard Copy logic
-def clipper():
-    
-    root.clipboard_clear()
-    root.clipboard_append(pw_entry.get())
+    root = tk.Tk()
+    root.title("BMI Calculator")
+    root.configure(bg="#f0f0f0")
+    root.geometry("640x720")
 
-#front-end logic for taking user input
-lf_string = LabelFrame(root, text='Input String')
-lf_string.pack(pady=10)
+    canvas = tk.Canvas(root, width=600, height=100, bg="#f0f0f0")
+    canvas.grid(columnspan=3, rowspan=1)
 
-string_entry = Entry(lf_string, width=40)
-string_entry.pack(padx=10, pady=5)
+    logo = Image.open('Images/logo.png')
+    logo = ImageTk.PhotoImage(logo)
+    logo_label = tk.Label(image=logo, bg="#f0f0f0")
+    logo_label.image = logo
+    logo_label.grid(column=0, row=0, columnspan=2)
 
-lf_numbers = LabelFrame(root, text='Numbers')
-lf_numbers.pack(pady=10)
+    full_name_label = tk.Label(root, text="Enter Full Name:", font=("Helvetica", 12, "bold"), bg="#f0f0f0", fg="black")
+    full_name_label.grid(column=0, row=1, padx=5, pady=8, sticky="e")
 
-num_entry = Entry(lf_numbers, width=40)
-num_entry.pack(padx=10, pady=5)
+    full_name_var = tk.StringVar()
+    full_name_entry = tk.Entry(root, textvariable=full_name_var, font=("Helvetica", 12, "normal"), width=30, bg="#e6e6e6", fg="black", bd=1, justify='center')
+    full_name_entry.grid(column=1, row=1, padx=5, pady=8, sticky="w")
 
-lf_symbols = LabelFrame(root, text='Symbols')
-lf_symbols.pack(pady=10)
+    age_label = tk.Label(root, text="Enter Age:", font=("Helvetica", 12, "bold"), bg="#f0f0f0", fg="black")
+    age_label.grid(column=0, row=2, padx=5, pady=8, sticky="e")
 
-special_entry = Entry(lf_symbols, width=40)
-special_entry.pack(padx=10, pady=5)
+    age_var = tk.IntVar()
+    age_entry = tk.Entry(root, textvariable=age_var, font=("Helvetica", 12, "normal"), width=10, bg="#e6e6e6", fg="black", bd=1, justify='center')
+    age_entry.grid(column=1, row=2, padx=5, pady=8, sticky="w")
 
-lf_length = LabelFrame(root, text='Password Length')
-lf_length.pack(pady=10)
+    height_label = tk.Label(root, text="Enter Height (cm):", font=("Helvetica", 12, "bold"), bg="#f0f0f0", fg="black")
+    height_label.grid(column=0, row=3, padx=5, pady=8, sticky="e")
 
-length_entry = Entry(lf_length, width=40)
-length_entry.pack(padx=10, pady=5)
+    height_entry = tk.Entry(root, font=("Helvetica", 12, "normal"), width=10, bg="#e6e6e6", fg="black", bd=1, justify='center')
+    height_entry.grid(column=1, row=3, padx=5, pady=8, sticky="w")
 
-my_frame = Frame(root)
-my_frame.pack(pady=20)
+    weight_label = tk.Label(root, text="Enter Weight (kg):", font=("Helvetica", 12, "bold"), bg="#f0f0f0", fg="black")
+    weight_label.grid(column=0, row=4, padx=5, pady=8, sticky="e")
 
-my_button = Button(my_frame, text='Generate Random Password', command=generate_password)
-my_button.grid(row=0, column=0, padx=10)
+    weight_entry = tk.Entry(root, font=("Helvetica", 12, "normal"), width=10, bg="#e6e6e6", fg="black", bd=1, justify='center')
+    weight_entry.grid(column=1, row=4, padx=5, pady=8, sticky="w")
 
-clip_button = Button(my_frame, text='Copy to Clipboard', command=clipper)
-clip_button.grid(row=0, column=1, padx=10)
+    submit_btn = tk.Button(root, text="Calculate", font=("Helvetica", 12, "bold"), bg="#ff6f61", fg="white", height=2, width=15, justify="center", command=on_generate_clicked)
+    submit_btn.grid(column=0, row=5, columnspan=2, padx=5, pady=10)
 
-#viewing the random generated password
-pw_entry = Entry(root, text='', font=('Helvetica', 16), width=40)
-pw_entry.pack(pady=10)
+    generate_graph_btn = tk.Button(root, text="View Graph", font=("Helvetica", 12, "bold"), bg="#ff6f61", fg="white", height=2, width=15, justify="center", command=on_view_graph_clicked)
+    generate_graph_btn.grid(column=0, row=6, columnspan=2, padx=5, pady=10)
 
-root.mainloop()
+    bmi_output_label = tk.Label(root, text="BMI", font=("Helvetica", 14, "normal"), bg="#e6e6e6", fg="black", width=40, height=4, border=2)
+    bmi_output_label.grid(column=0, row=7, columnspan=2, padx=10, pady=20)
 
-#Implementation
-#python main.py
+    root.mainloop()
+
+if __name__ == "__main__":
+    open_main_app()
